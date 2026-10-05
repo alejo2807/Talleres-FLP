@@ -188,93 +188,9 @@
 ; ((1 * x) + (y - 12))
 
 
-(expresion (sub (add
-                  (mul (const 3)(var 'w))
-                  (sub (var 'y)(const 89)))
-                (mul (const 3) (var 'p))))
-;(((3 * w) + (y - 89)) - (3 * p))
+
 
 ; Declaración de IA
 ; * Para el predicado Constante, se uso la IA para verificar que predicado evalua si es
 ;   entero o no.
-; * Profundizar el tema de TAD, dado el ejemplo de SumaAnidada.
-
-
-
-
-;---------------------------------------------------------------------------
-;-----------------------------------
-; Implementacion mediante Datatype  |
-;-----------------------------------
-
-
-;Constructores y predicados van juntos cuando creamos el datatype
-(define-datatype expresion expresion?
-  (const (numero integer?))
-  (var (variable symbol?))
-  (add (expresionIzq expresion?)
-       (expresionDer expresion?))
-  (sub (expresionIzq expresion?)
-       (expresionDer expresion?))
-  (mul (expresionIzq expresion?)
-       (expresionDer expresion?))
-  
-  )
-
-; Extractores
-(define calcular
-  (lambda (expr)
-    (cases expresion expr
-
-      ;Casos de la gramatica
-      (const (numero) numero) ;cte
-      (var (variable) variable) ;var
-
-      (add (expresionIzq expresionDer) ;suma 
-           (+ (calcular expresionIzq)
-              (calcular expresionDer)))
-      
-      (sub (expresionIzq expresionDer) ;resta
-           (- (calcular expresionIzq)
-              (calcular expresionDer)))
-      
-      (mul (expresionIzq expresionDer) ;multiplicacion
-           (* (calcular expresionIzq)
-              (calcular expresionDer)))
-      
-      (else 'operacion_incorrecta)
-      )
-    )
-  )
-
-; Pruebas:
-;
-;1. ((x + 99) * (7 - y))
-; #(struct:mul #(struct:add #(struct:var x) #(struct:const 99))
-;              #(struct:sub #(struct:const 7) #(struct:var y)))
-(mul (add (var 'x) (const 99))
-     (sub (const 7) (var 'y)))
-
-;2. (((3 * w) + (y - 89)) - (3 * p))
-;#(struct:sub #(struct:add #(struct:mul #(struct:const 3) #(struct:var w)) #(struct:sub #(struct:var y) #(struct:const 89)))
-;             #(struct:mul #(struct:const 3) #(struct:var p)))
-(sub (add
-         (mul (const 3)(var 'w))
-         (sub (var 'y)(const 89)))
-     (mul (const 3) (var 'p)))
-
-;3. ((((7 * m) + (x + 8)) - (2 * t)) * v)
-; #(struct:mul
-;  #(struct:sub #(struct:add #(struct:mul #(struct:const 7) #(struct:var m)) #(struct:add #(struct:var x) #(struct:const 8))) #(struct:mul #(struct:const 2) #(struct:var t)))
-;  #(struct:var v))
-(mul
- (sub (add
-         (mul (const 7)(var 'm))
-         (add (var 'x)(const 8)))
-     (mul (const 2) (var 't)))
- (var 'v))
-     
-
-
-
-
+; * Profundizar el tema de TAD, dado el ejemplo de SumaAnidada.[david@david-AsusVivobook15 talleres]$ 
