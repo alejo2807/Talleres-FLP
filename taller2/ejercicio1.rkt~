@@ -207,26 +207,26 @@
 ; Implementacion mediante Datatype  |
 ;-----------------------------------
 
-;Constructores y predicados van juntos cuando creamos el datatype
-;(define-datatype expresion expresion?
-;  (const (numero integer?))
-;  (var (variable symbol?))
-;  (add (expresionIzq expresion?)
-;       (expresionDer expresion?))
-;  (sub (expresionIzq expresion?)
-;       (expresionDer expresion?))
-;  (mul (expresionIzq expresion?)
-;       (expresionDer expresion?))
-;  
-;  )
 
+;Constructores y predicados van juntos cuando creamos el datatype
+(define-datatype expresion expresion?
+  (const (numero integer?))
+  (var (variable symbol?))
+  (add (expresionIzq expresion?)
+       (expresionDer expresion?))
+  (sub (expresionIzq expresion?)
+       (expresionDer expresion?))
+  (mul (expresionIzq expresion?)
+       (expresionDer expresion?))
+  
+  )
 
 ; Extractores
 (define calcular
   (lambda (expr)
     (cases expresion expr
 
-      ; Casos de la gramatica
+      ;Casos de la gramatica
       (const (numero) numero) ;cte
       (var (variable) variable) ;var
 
@@ -273,36 +273,7 @@
          (add (var 'x)(const 8)))
      (mul (const 2) (var 't)))
  (var 'v))
-;|
-
-
-; PARSE for list
-; idea : (3 + x) => (add (const 3) (var 'x))
-
-(define PARSE-LT
-  (lambda (exp)
-    (cond
-      [(integer? exp) (const exp)]
-      [(symbol? exp) (var exp)]
-      [(eqv? '+ (cadr exp)) (add (PARSE-LT (car exp)) (PARSE-LT (caddr exp)))]
-      [(eqv? '- (cadr exp)) (sub (PARSE-LT (car exp)) (PARSE-LT (caddr exp)))]
-      [(eqv? '* (cadr exp)) (sub (PARSE-LT (car exp)) (PARSE-LT (caddr exp)))]
-      [else 'lol]
-    )))
-
-; UNPARSE for list
-; idea : (add (const 3) (var 'x)) => (3 + x)
-
-(define UNPARSE-LT
-  (lambda (exp)
-    (cond
-      [(const? exp) (const->value exp)]
-      [(var? exp) (var->value exp)]
-      [(add? exp) (list (UNPARSE-LT (add->left exp)) '+ (UNPARSE-LT (add->right exp)))]
-      [(sub? exp) (list (UNPARSE-LT (sub->left exp)) '- (UNPARSE-LT (sub->right exp)))]
-      [(mul? exp) (list (UNPARSE-LT (mul->left exp)) '* (UNPARSE-LT (mul->right exp)))]
-      [else 'a]
-    )))
+     
 
 
 
