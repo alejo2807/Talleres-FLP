@@ -2,23 +2,36 @@
 
 ;Ejercicio2.
 
-;Declaracion de uso de IA: Se utilizo IA para explicar un poco mas
-;los conceptos del parse y el unparse, porque no los tenia completamente claros.
 
-(define-datatype expresion expresion?
-  (const (numero integer?))
-  (var (variable symbol?))
-  (add (expresionIzq expresion?)
-       (expresionDer expresion?))
-  (sub (expresionIzq expresion?)
-       (expresionDer expresion?))
-  (mul (expresionIzq expresion?)
-       (expresionDer expresion?))
-  )
+; Parse para expresion basada en listas.
+; idea : (3 + x) => (add (const 3) (var 'x))
 
+(define PARSE-LT
+  (lambda (exp)
+    (cond
+      [(integer? exp) (const exp)]
+      [(symbol? exp) (var exp)]
+      [(eqv? '+ (cadr exp)) (add (PARSE-LT (car exp)) (PARSE-LT (caddr exp)))]
+      [(eqv? '- (cadr exp)) (sub (PARSE-LT (car exp)) (PARSE-LT (caddr exp)))]
+      [(eqv? '* (cadr exp)) (sub (PARSE-LT (car exp)) (PARSE-LT (caddr exp)))]
+      [else 'lol]
+    )))
 
+; Unparse para expresion basada en listas.
+; idea : (add (const 3) (var 'x)) => (3 + x)
 
-;------------------------------Parse para datatype expresion
+(define UNPARSE-LT
+  (lambda (exp)
+    (cond
+      [(const? exp) (const->value exp)]
+      [(var? exp) (var->value exp)]
+      [(add? exp) (list (UNPARSE-LT (add->left exp)) '+ (UNPARSE-LT (add->right exp)))]
+      [(sub? exp) (list (UNPARSE-LT (sub->left exp)) '- (UNPARSE-LT (sub->right exp)))]
+      [(mul? exp) (list (UNPARSE-LT (mul->left exp)) '* (UNPARSE-LT (mul->right exp)))]
+      [else 'a]
+    )))
+
+; Parse para datatype expresion
 (define PARSE-DT
   (lambda(expr)
     (cond
@@ -38,14 +51,14 @@
   )
 
 
-;Pruebas PARSE-DT:
+; Pruebas PARSE-DT:
 (PARSE-DT '((3 + x) * (4 - y)))
 (PARSE-DT '(q * ((2 - w) * (4 - y))))
 (PARSE-DT '(b - (t - ((2 + e) * (4 - k)))))
 (PARSE-DT '((z - 4) * (u - ((2 + r) * (4 + p)))))
 (PARSE-DT '((11 - w) + (h - 3)))
 
-;------------------------------Unparse para datatype expresion
+; Unparse para datatype expresion
 (define UNPARSE-DT
   (lambda (arb)
     (cases expresion arb
@@ -62,12 +75,13 @@
   ) 
 )
 
-;Pruebas UNPARSER-DT:
+; Pruebas UNPARSER-DT:
 (UNPARSE-DT (PARSE-DT '((z + 45) + (3 + X))))
 (UNPARSE-DT (PARSE-DT '(q * ((2 - w) * (4 - y)))))
 (UNPARSE-DT (PARSE-DT '(b - (t - ((2 + e) * (4 - k))))))
 (UNPARSE-DT (PARSE-DT '((z - 4) * (u - ((2 + r) * (4 + p))))))
 (UNPARSE-DT (PARSE-DT '((11 - w) + (h - 3))))
 
+;Declaracion de uso de IA: Se utilizo IA para explicar un poco mas los conceptos del parse y el unparse.
 
 

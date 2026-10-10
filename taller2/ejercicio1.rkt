@@ -247,62 +247,24 @@
     )
   )
 
-; Pruebas:
-;
-;1. ((x + 99) * (7 - y))
-; #(struct:mul #(struct:add #(struct:var x) #(struct:const 99))
-;              #(struct:sub #(struct:const 7) #(struct:var y)))
+; Pruebas Implementacion Datatype:
 (mul (add (var 'x) (const 99))
      (sub (const 7) (var 'y)))
 
 ;2. (((3 * w) + (y - 89)) - (3 * p))
-;#(struct:sub #(struct:add #(struct:mul #(struct:const 3) #(struct:var w)) #(struct:sub #(struct:var y) #(struct:const 89)))
-;             #(struct:mul #(struct:const 3) #(struct:var p)))
 (sub (add
          (mul (const 3)(var 'w))
          (sub (var 'y)(const 89)))
      (mul (const 3) (var 'p)))
 
 ;3. ((((7 * m) + (x + 8)) - (2 * t)) * v)
-; #(struct:mul
-;  #(struct:sub #(struct:add #(struct:mul #(struct:const 7) #(struct:var m)) #(struct:add #(struct:var x) #(struct:const 8))) #(struct:mul #(struct:const 2) #(struct:var t)))
-;  #(struct:var v))
+
 (mul
  (sub (add
          (mul (const 7)(var 'm))
          (add (var 'x)(const 8)))
      (mul (const 2) (var 't)))
  (var 'v))
-;|
-
-
-; PARSE for list
-; idea : (3 + x) => (add (const 3) (var 'x))
-
-(define PARSE-LT
-  (lambda (exp)
-    (cond
-      [(integer? exp) (const exp)]
-      [(symbol? exp) (var exp)]
-      [(eqv? '+ (cadr exp)) (add (PARSE-LT (car exp)) (PARSE-LT (caddr exp)))]
-      [(eqv? '- (cadr exp)) (sub (PARSE-LT (car exp)) (PARSE-LT (caddr exp)))]
-      [(eqv? '* (cadr exp)) (sub (PARSE-LT (car exp)) (PARSE-LT (caddr exp)))]
-      [else 'lol]
-    )))
-
-; UNPARSE for list
-; idea : (add (const 3) (var 'x)) => (3 + x)
-
-(define UNPARSE-LT
-  (lambda (exp)
-    (cond
-      [(const? exp) (const->value exp)]
-      [(var? exp) (var->value exp)]
-      [(add? exp) (list (UNPARSE-LT (add->left exp)) '+ (UNPARSE-LT (add->right exp)))]
-      [(sub? exp) (list (UNPARSE-LT (sub->left exp)) '- (UNPARSE-LT (sub->right exp)))]
-      [(mul? exp) (list (UNPARSE-LT (mul->left exp)) '* (UNPARSE-LT (mul->right exp)))]
-      [else 'a]
-    )))
 
 
 
