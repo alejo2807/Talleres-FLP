@@ -7,14 +7,14 @@
 ; idea : (3 + x) => (add (const 3) (var 'x))
 
 (define PARSE-LT
-  (lambda (exp)
+  (lambda (expr)
     (cond
-      [(integer? exp) (const exp)]
-      [(symbol? exp) (var exp)]
-      [(eqv? '+ (cadr exp)) (add (PARSE-LT (car exp)) (PARSE-LT (caddr exp)))]
-      [(eqv? '- (cadr exp)) (sub (PARSE-LT (car exp)) (PARSE-LT (caddr exp)))]
-      [(eqv? '* (cadr exp)) (sub (PARSE-LT (car exp)) (PARSE-LT (caddr exp)))]
-      [else 'lol]
+      [(integer? expr) (const expr)]
+      [(symbol? expr) (var expr)]
+      [(eqv? '+ (cadr expr)) (add (PARSE-LT (car expr)) (PARSE-LT (caddr expr)))]
+      [(eqv? '- (cadr expr)) (sub (PARSE-LT (car expr)) (PARSE-LT (caddr expr)))]
+      [(eqv? '* (cadr expr)) (sub (PARSE-LT (car expr)) (PARSE-LT (caddr expr)))]
+      [else 'error]
     )))
 
 ; Unparse para expresion basada en listas.
@@ -28,7 +28,7 @@
       [(add? expr) (list (UNPARSE-LT (add->left expr)) '+ (UNPARSE-LT (add->right expr)))]
       [(sub? expr) (list (UNPARSE-LT (sub->left expr)) '- (UNPARSE-LT (sub->right expr)))]
       [(mul? expr) (list (UNPARSE-LT (mul->left expr)) '* (UNPARSE-LT (mul->right expr)))]
-      [else 'a]
+      [else 'error]
     )))
 
 ; Parse para datatype expresion
