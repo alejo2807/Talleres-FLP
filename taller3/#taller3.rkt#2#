@@ -1,0 +1,98 @@
+#lang eopl
+
+; *********************************************************
+; Interpretador
+
+;; La definición BNF para las expresiones del lenguaje:
+;;
+;;  <programa>          := <expresion>
+;;                         un-program (exp)
+;;  <expresion>         := <numero>
+;;                         numero-lit (num
+;;                      := "\""<texto>"\""
+;;                         text-lit (txt)
+;;                      := <identificador>
+;;                         var-exp (id)
+;;                      := (<expresion> <primitiva-binaria> <expresion>)
+;;                         primapp-bin-exp (exp1 prim-binaria exp2)
+;;                      := <primitiva-unaria> (<expresion>)
+;;                         primapp-un-exp (prim-unaria exp)
+;;  <primitiva-binaria> := + (primitiva-suma)
+;;                      := ~ (primitiva-resta)
+;;                      := / (primitiva-div)
+;;                      := * (primitiva-multi)
+;;                      := concat (primitiva-concat)
+;;                      := > (primitiva-mayor)
+;;                      := < (primitiva-menor)
+;;                      := >= (primitiva-mayor-igual)
+;;                      := <= (primitiva-menor-igual)
+;;                      := =! (primitiva-diferente)
+;;                      := == (primitiva-comparador-igual)
+;;  <primitiva-unaria>  := longitud (primitiva-longitud)
+;;                      := add1 (primitiva-add1)
+;;                      := sub1 (primitiva-sub1)
+;;                      := neg (primitiva-negacion-booleana)
+; *********************************************************
+
+; *********************************************************
+; Especificación Léxica
+
+; Instrucciones para crear la especificación léxica
+; <scanner-spec      := ({<exp-reg-y-acción>}*)
+; <exp-reg-y-acción> := (<nombre> ({<exp-reg>}*) <salida>)
+; <nombre>           := <símbolo>
+; <exp-reg>          := <cadena> | letter | digit | whitespace | any
+;                    := (not <caracter>) | (or {<exp-reg>}*)
+;                    := (arbno <exp-reg>) | (concat {<exp-reg>}*)
+; <salida>           := skip | symbol | number | string
+
+(define scanner-interpretador
+  '((espacio-blanco (whitespace) skip)
+    (comentario (";" (arbno (not "#\newline"))) skip)
+    (decimal-positivo (digit "." (digit arbno digit)) number) ; por revisar
+    (decimal-negativo ("-" digit "." (digit arbno digit)) number) ; por revisar
+    (entero-positivo (digit (arbno digit)) number)
+    (entero-negativo ("-" digit (arbno digit)) number)
+    (texto ("\"" (arbno (not #\")) "\"") string) ; por revisar
+    (identificar ("@" letter (arbno letter)) symbol) ; por revisar
+    ))
+; *********************************************************
+
+; *********************************************************
+; Especificacion Sintáctica (Gramatica)
+
+; Instrucciones para crear la especificación sintática
+; <gramática>   := ({<producción>}*)
+; <producción>  := (<lhs> ({rhs-item>}*) <nombre-prod>)
+; <lhs>         := <símbolo>
+; <rhs-item>    := <símbolo> | <cadena>
+;               := (arbno {<rhs-item>}*)
+;               := (separated-list {<rhs-item>}* <cadena>)
+; <nombre-prod> := <símbolo>
+
+; Nota: rhs = no terminal
+
+(define grammar-interpretador
+  '((programa (expresion) un-programa)
+
+    ; Para cualquier clase léxica crear un numero-lit
+    (expresion (entero-positivo) numero-lit)
+    (expresion (entero-negativo) numero-lit)
+    (expresion (decimal-positivo) numero-lit)
+    (expresion (decimal-negativo) numero-lit)
+
+    ; Variables
+    (expresion (identificar) var-exp)
+    
+    (expresion (texto) txt)
+    
+    ;(expresion (primitiva-unitaria) primapp-un-exp)
+    ))
+; *********************************************************
+(sllgen:make-define-datatypes scanner-interpretador grammar-interpretador)
+
+(define show-the-datatypes
+  (lambda () (sllgen:list-define-datatypes scanner-interpretador grammar-interpretador)))
+
+
+

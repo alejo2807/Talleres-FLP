@@ -35,7 +35,7 @@
 ; *********************************************************
 
 ; *********************************************************
-; Especificacipon lexica
+; Especificación Léxica
 
 (define scanner-interpretador
   '((espacio-blanco (whitespace) skip)
