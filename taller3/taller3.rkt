@@ -49,8 +49,8 @@
 (define scanner-interpretador
   '((espacio-blanco (whitespace) skip)
     (comentario (";" (arbno (not #\newline))) skip)
-    (decimal-positivo (digit "." digit (arbno digit)) number) ; por revisar
-    (decimal-negativo ("-" digit "." digit (arbno digit)) number) ; por revisar
+    (decimal-positivo (digit(arbno digit) "." digit (arbno digit)) number)
+    (decimal-negativo ("-" digit(arbno digit) "." digit (arbno digit)) number)
     (entero-positivo (digit (arbno digit)) number)
     (entero-negativo ("-" digit (arbno digit)) number)
     (texto ("\"" (arbno (not #\")) "\"") string) ; por revisar
@@ -97,7 +97,7 @@
     (primitiva-binaria ("<") primitiva-menor)
     (primitiva-binaria (">=") primitiva-mayor-igual)
     (primitiva-binaria ("<=") primitiva-menor-igual)
-    (primitiva-binaria ("=!") primitiva-diferente)
+    (primitiva-binaria ("!=") primitiva-diferente)
     (primitiva-binaria ("==") primitiva-comparador-igual)
     
     ; Primitiva Uninaria
