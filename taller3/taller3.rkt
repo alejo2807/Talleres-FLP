@@ -108,12 +108,15 @@
     
     ))
 ;*******************************************************************************************
+
+;*******************************************************************************************
 ; La función show-the-datatypes permite consultar las definiciones de tipos de datos
 ; que corresponden a la gramática.
 
 (sllgen:make-define-datatypes scanner-interpretador grammar-interpretador)
 (define show-the-datatypes
   (lambda () (sllgen:list-define-datatypes scanner-interpretador grammar-interpretador)))
+;*******************************************************************************************
 
 ;*******************************************************************************************
 ; FrontEnd => Análisis léxico (scanner) y sintáctico (parser) integrados
@@ -127,32 +130,120 @@
   (sllgen:make-string-scanner scanner-interpretador grammar-interpretador))
 
 ; Interpretador (FrontEnd + Evaluación + Señal para lectura)
-;(define interpretador
-;  (sllgen:make-rep-loop "--> "
-;    (lambda (pgm) (eval-program  pgm)) ; error porque no se ha definido eval-program
-;    (sllgen:make-stream-parser 
-;      scanner-interpretador
-;      grammar-interpretador)))
+(define interpretador
+  (sllgen:make-rep-loop "--> "
+    (lambda (pgm) (evaluar-programa  pgm)) ; error porque no se ha definido eval-program
+    (sllgen:make-stream-parser 
+      scanner-interpretador
+      grammar-interpretador)))
 
 ;*******************************************************************************************
-; Nuestro intreprete
+
+;*******************************************************************************************
+;                                      Nuestro intreprete
 
 ; eval-program: <programa> -> numero
 ; función que evalúa un programa teniendo en cuenta un ambiente
 ; dado (se inicializa dentro del programa)
-;(define eval-program
-;  (lambda (pgm)
-;    (cases program pgm
-;      (a-program (body)
-;                 (eval-expression body (init-env))))))
+(define evaluar-programa
+  (lambda (pgm)
+    pgm))
+       ;          (eval-expression body (ambiente-inicial ))))))
+       ; Falta implementar la evluacion de expresiones
+;*******************************************************************************************
+
+;*******************************************************************************************
+; Creación de Ambiente
+
+; definición del tipo de dato ambiente
+(define-datatype ambiente ambiente?
+  (ambiente-vacio)
+  (ambiente-extendido-record (simbolos (list-of symbol?))
+                       (vals (list-of scheme-value?))
+                       (env ambiente?)))
+
+(define scheme-value? (lambda (v) #t))
 
 ; Ambiente inicial
-;(define init-env
-;  (lambda ()
-;    (extend-env
-;     '(@a @b @c @d @e)
-;     '(1 2 3 "hola" "FLP")
-;     (empty-env))))
+(define ambiente-inicial
+  (lambda ()
+    (ambiente-extendido
+     '(@a @b @c @d @e)
+     '(1 2 3 "hola" "FLP")
+     (ambiente-vacio))))
+
+; Ambiente extendido
+(define ambiente-extendido 
+  (lambda (syms vals env)
+    (ambiente-extendido-record syms vals env)))
+
+; Prueba
+(ambiente-extendido '(@a @b @c @d @e) '(1 2 3 "hola" "FLP") (ambiente-vacio))
+
+; return:
+;#(struct:ambiente-extendido-record
+  ;(@a @b @c @d @e)
+  ;(1 2 3 "hola" "FLP")
+  ;#(struct:ambiente-vacio))
+;*******************************************************************************************
+
+;*******************************************************************************************
+; to-do:
+; * evaluar-expression
+; * evaluar-primitiva-binaria
+; * evaluar-primitiva-unaria
+; eval-expression
+;(define eval-expression
+;  (lambda (exp env)
+;    (cases expression exp
+;      (numero-lit (numero) numero)
+;      (var-exp (identificador) (apply-env env id))
+;      ;(txt (texto) texto)
+;      (primitiva-suma (any prim any)
+;                      (let ((args (eval-any any env)))
+;                        (aplicar-primitva prim args))))))
+
+      ;(primapp-exp (prim rands)
+      ;             (let ((args (eval-rands rands env)))
+      ;               (apply-primitive prim args)))
+
+; eval-rands
+;(define eval-rands
+;  (lambda (rands env)
+;    (map (lambda (x) (eval-rand x env)) rands)))
+
+; eval-rand
+;(define eval-rand
+;  (lambda (rand env)
+;    (eval-expression rand env)))
+      
+; apply-env
+;(define apply-env
+;  (lambda (env sym)
+;    (cases environment env
+;      (empty-env-record ()
+                        ;(eopl:error 'apply-env "No binding for ~s" sym))
+      ;(extended-env-record (syms vals env)
+                           ;(let ((pos (list-find-position sym syms)))
+                             ;(if (number? pos)
+                                 ;(list-ref vals pos)
+                                 ;(apply-env env sym)))))))
+
+;apply-primitive: <primitiva> <list-of-expression> -> numero
+;(define apply-primitive
+  ;(lambda (prim args)
+   ; (cases primitive prim
+    ;  (add-prim () (+ (car args) (cadr args)))
+     ; (substract-prim () (- (car args) (cadr args)))
+      ;(mult-prim () (* (car args) (cadr args)))
+      ;(incr-prim () (+ (car args) 1))
+      ;(decr-prim () (- (car args) 1)))))
+
+
+    
+
+
+    
 ;*******************************************************************************************
 ; Errores por solucionar (TODOs)
 ;*******************************************************************************************
