@@ -53,7 +53,7 @@
     (decimal-negativo ("-" digit(arbno digit) "." digit (arbno digit)) number)
     (entero-positivo (digit (arbno digit)) number)
     (entero-negativo ("-" digit (arbno digit)) number)
-    (texto (letter(arbno (or letter digit "_"))) symbol)
+    (texto (letter (arbno (or letter digit "_"))) string) ; por revisar
     (identificar ("@" letter (arbno letter)) symbol) ; por revisar
     ))
 ;*******************************************************************************************
@@ -93,6 +93,13 @@
     ; 2). := <primitiva-unaria> (<expresion>) --> primapp-un-exp (prim-unaria exp)
     (expresion (primitiva-unaria "("expresion")") primapp-un-exp)
 
+    ; Los dos casos de la gramatica que nos faltaban:
+    ; 1). := (<expresion> <primitiva-binaria> <expresion>) --> primapp-bin-exp (exp1 prim-binaria exp2)
+    (expresion ("("expresion primitiva-binaria expresion")") primapp-bin-exp) ;faltaban los parentesis "(" y ")" para que funcionara jajaj
+    ; 2). := <primitiva-unaria> (<expresion>) --> primapp-un-exp (prim-unaria exp)
+    (expresion (primitiva-unaria expresion) primapp-un-exp)
+
+    
     ; Primitiva Binaria
     (primitiva-binaria ("+") primitiva-suma)
     (primitiva-binaria ("~") primitiva-resta)
@@ -180,37 +187,8 @@
 
 ; Ambiente extendido
 (define ambiente-extendido 
-  (lambda (simbolos vals env)
-    (ambiente-extendido-record simbolos vals env)))
-
-;Aply-env
-(define buscar-variable
-  (lambda (env sym)
-    (cases ambiente env
-      (ambiente-vacio () "Error, la variable no existe")
-      (ambiente-extendido-record (simbolos vals env)
-                           (let ((pos (list-find-position sym simbolos)))
-                             (if (number? pos)
-                                 (list-ref vals pos)
-                                 (buscar-variable env sym)))))))
-;Funciones Auxiliares
-
-; funciones auxiliares para encontrar la posición de un símbolo
-; en la lista de símbolos de unambiente
-
-(define list-find-position
-  (lambda (sym los)
-    (list-index (lambda (sym1) (eqv? sym1 sym)) los)))
-
-(define list-index
-  (lambda (pred ls)
-    (cond
-      ((null? ls) #f)
-      ((pred (car ls)) 0)
-      (else (let ((list-index-r (list-index pred (cdr ls))))
-              (if (number? list-index-r)
-                (+ list-index-r 1)
-                #f))))))
+  (lambda (syms vals env)
+    (ambiente-extendido-record syms vals env)))
 
 ; Prueba
 (ambiente-extendido '(@a @b @c @d @e) '(1 2 3 "hola" "FLP") (ambiente-vacio))
@@ -223,24 +201,24 @@
 ;*******************************************************************************************
 
 ;*******************************************************************************************
-
-
+; to-do:
 ; * evaluar-expression
+; * evaluar-primitiva-binaria
+; * evaluar-primitiva-unaria
 ; eval-expression
-; (define eval-expression
-;   (lambda (exp env)
-;     (cases expression exp
-;       (numero-lit (numero) numero)
-;       (var-exp (identificador) (apply-env env id))
-;       (txt (texto) texto)
-;       (primitiva-suma (any prim any)
-;                       (let ((args (eval-any any env)))
-;                         (aplicar-primitva prim args))))))
-; 
-;       (primapp-exp (prim rands)
-;                    (let ((args (eval-rands rands env)))
-;                      (apply-primitive prim args)))
-; 
+;(define eval-expression
+;  (lambda (exp env)
+;    (cases expression exp
+;      (numero-lit (numero) numero)
+;      (var-exp (identificador) (apply-env env id))
+;      ;(txt (texto) texto)
+;      (primitiva-suma (any prim any)
+;                      (let ((args (eval-any any env)))
+;                        (aplicar-primitva prim args))))))
+
+      ;(primapp-exp (prim rands)
+      ;             (let ((args (eval-rands rands env)))
+      ;               (apply-primitive prim args)))
 
 ; eval-rands
 ;(define eval-rands
@@ -252,6 +230,17 @@
 ;  (lambda (rand env)
 ;    (eval-expression rand env)))
       
+; apply-env
+;(define apply-env
+;  (lambda (env sym)
+;    (cases environment env
+;      (empty-env-record ()
+                        ;(eopl:error 'apply-env "No binding for ~s" sym))
+      ;(extended-env-record (syms vals env)
+                           ;(let ((pos (list-find-position sym syms)))
+                             ;(if (number? pos)
+                                 ;(list-ref vals pos)
+                                 ;(apply-env env sym)))))))
 
 ;apply-primitive: <primitiva> <list-of-expression> -> numero
 ;(define apply-primitive
@@ -263,9 +252,8 @@
       ;(incr-prim () (+ (car args) 1))
       ;(decr-prim () (- (car args) 1)))))
 
-;faltantes:---------------------------
-; * evaluar-primitiva-binaria
-; * evaluar-primitiva-unaria 
+
+    
 
 
     
