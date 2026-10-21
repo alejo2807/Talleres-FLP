@@ -87,6 +87,13 @@
     ; Texto
     (expresion (texto) txt) ; por revisar
 
+    ; Los dos casos de la gramatica que nos faltaban:
+    ; 1). := (<expresion> <primitiva-binaria> <expresion>) --> primapp-bin-exp (exp1 prim-binaria exp2)
+    (expresion ("("expresion primitiva-binaria expresion")") primapp-bin-exp) ;faltaban los parentesis "(" y ")" para que funcionara jajaj
+    ; 2). := <primitiva-unaria> (<expresion>) --> primapp-un-exp (prim-unaria exp)
+    (expresion (primitiva-unaria expresion) primapp-un-exp)
+
+    
     ; Primitiva Binaria
     (primitiva-binaria ("+") primitiva-suma)
     (primitiva-binaria ("~") primitiva-resta)
