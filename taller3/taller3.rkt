@@ -48,12 +48,12 @@
 
 (define scanner-interpretador
   '((espacio-blanco (whitespace) skip)
-    (comentario (";" (arbno (not #\newline))) skip)
+    (comentario ("%" (arbno (not #\newline))) skip)
     (decimal-positivo (digit(arbno digit) "." digit (arbno digit)) number)
     (decimal-negativo ("-" digit(arbno digit) "." digit (arbno digit)) number)
     (entero-positivo (digit (arbno digit)) number)
     (entero-negativo ("-" digit (arbno digit)) number)
-    (texto ("\"" (arbno (not #\")) "\"") string) ; por revisar
+    (texto (letter(arbno (or letter digit "_"))) symbol)
     (identificar ("@" letter (arbno letter)) symbol) ; por revisar
     ))
 ;*******************************************************************************************
@@ -85,7 +85,13 @@
     (expresion (identificar) var-exp)
 
     ; Texto
-    (expresion (texto) txt) ; por revisar
+    (expresion ("\""texto"\"") texto-lit)
+
+    ; Los dos casos de la gramatica que nos faltaban:
+    ; 1). := (<expresion> <primitiva-binaria> <expresion>) --> primapp-bin-exp (exp1 prim-binaria exp2)
+    (expresion ("("expresion primitiva-binaria expresion")") primapp-bin-exp) ;faltaban los parentesis "(" y ")" para que funcionara jajaj
+    ; 2). := <primitiva-unaria> (<expresion>) --> primapp-un-exp (prim-unaria exp)
+    (expresion (primitiva-unaria "("expresion")") primapp-un-exp)
 
     ; Primitiva Binaria
     (primitiva-binaria ("+") primitiva-suma)
@@ -104,9 +110,11 @@
     (primitiva-unaria ("longitud") primitiva-longitud)
     (primitiva-unaria ("add1") primitiva-add1)
     (primitiva-unaria ("sub1") primitiva-sub1)
-    (primitiva-unaria ("neg") primitiva-negracion-booleana)
+    (primitiva-unaria ("neg") primitiva-negacion-booleana)
     
     ))
+;*******************************************************************************************
+
 ;*******************************************************************************************
 ; La función show-the-datatypes permite consultar las definiciones de tipos de datos
 ; que corresponden a la gramática.
@@ -114,6 +122,7 @@
 (sllgen:make-define-datatypes scanner-interpretador grammar-interpretador)
 (define show-the-datatypes
   (lambda () (sllgen:list-define-datatypes scanner-interpretador grammar-interpretador)))
+;*******************************************************************************************
 
 ;*******************************************************************************************
 ; FrontEnd => Análisis léxico (scanner) y sintáctico (parser) integrados
@@ -127,32 +136,139 @@
   (sllgen:make-string-scanner scanner-interpretador grammar-interpretador))
 
 ; Interpretador (FrontEnd + Evaluación + Señal para lectura)
-;(define interpretador
-;  (sllgen:make-rep-loop "--> "
-;    (lambda (pgm) (eval-program  pgm)) ; error porque no se ha definido eval-program
-;    (sllgen:make-stream-parser 
-;      scanner-interpretador
-;      grammar-interpretador)))
+(define interpretador
+  (sllgen:make-rep-loop "--> "
+    (lambda (pgm) (evaluar-programa  pgm)) ; error porque no se ha definido eval-program
+    (sllgen:make-stream-parser 
+      scanner-interpretador
+      grammar-interpretador)))
 
 ;*******************************************************************************************
-; Nuestro intreprete
+
+;*******************************************************************************************
+;                                      Nuestro intreprete
 
 ; eval-program: <programa> -> numero
 ; función que evalúa un programa teniendo en cuenta un ambiente
 ; dado (se inicializa dentro del programa)
-;(define eval-program
-;  (lambda (pgm)
-;    (cases program pgm
-;      (a-program (body)
-;                 (eval-expression body (init-env))))))
+(define evaluar-programa
+  (lambda (pgm)
+    pgm))
+       ;          (eval-expression body (ambiente-inicial ))))))
+       ; Falta implementar la evluacion de expresiones
+;*******************************************************************************************
+
+;*******************************************************************************************
+; Creación de Ambiente
+
+; definición del tipo de dato ambiente
+(define-datatype ambiente ambiente?
+  (ambiente-vacio)
+  (ambiente-extendido-record (simbolos (list-of symbol?))
+                       (vals (list-of scheme-value?))
+                       (env ambiente?)))
+
+(define scheme-value? (lambda (v) #t))
 
 ; Ambiente inicial
-;(define init-env
-;  (lambda ()
-;    (extend-env
-;     '(@a @b @c @d @e)
-;     '(1 2 3 "hola" "FLP")
-;     (empty-env))))
+(define ambiente-inicial
+  (lambda ()
+    (ambiente-extendido
+     '(@a @b @c @d @e)
+     '(1 2 3 "hola" "FLP")
+     (ambiente-vacio))))
+
+; Ambiente extendido
+(define ambiente-extendido 
+  (lambda (simbolos vals env)
+    (ambiente-extendido-record simbolos vals env)))
+
+;Aply-env
+(define buscar-variable
+  (lambda (env sym)
+    (cases ambiente env
+      (ambiente-vacio () "Error, la variable no existe")
+      (ambiente-extendido-record (simbolos vals env)
+                           (let ((pos (list-find-position sym simbolos)))
+                             (if (number? pos)
+                                 (list-ref vals pos)
+                                 (buscar-variable env sym)))))))
+;Funciones Auxiliares
+
+; funciones auxiliares para encontrar la posición de un símbolo
+; en la lista de símbolos de unambiente
+
+(define list-find-position
+  (lambda (sym los)
+    (list-index (lambda (sym1) (eqv? sym1 sym)) los)))
+
+(define list-index
+  (lambda (pred ls)
+    (cond
+      ((null? ls) #f)
+      ((pred (car ls)) 0)
+      (else (let ((list-index-r (list-index pred (cdr ls))))
+              (if (number? list-index-r)
+                (+ list-index-r 1)
+                #f))))))
+
+; Prueba
+(ambiente-extendido '(@a @b @c @d @e) '(1 2 3 "hola" "FLP") (ambiente-vacio))
+
+; return:
+;#(struct:ambiente-extendido-record
+  ;(@a @b @c @d @e)
+  ;(1 2 3 "hola" "FLP")
+  ;#(struct:ambiente-vacio))
+;*******************************************************************************************
+
+;*******************************************************************************************
+
+
+; * evaluar-expression
+; eval-expression
+; (define eval-expression
+;   (lambda (exp env)
+;     (cases expression exp
+;       (numero-lit (numero) numero)
+;       (var-exp (identificador) (apply-env env id))
+;       (txt (texto) texto)
+;       (primitiva-suma (any prim any)
+;                       (let ((args (eval-any any env)))
+;                         (aplicar-primitva prim args))))))
+; 
+;       (primapp-exp (prim rands)
+;                    (let ((args (eval-rands rands env)))
+;                      (apply-primitive prim args)))
+; 
+
+; eval-rands
+;(define eval-rands
+;  (lambda (rands env)
+;    (map (lambda (x) (eval-rand x env)) rands)))
+
+; eval-rand
+;(define eval-rand
+;  (lambda (rand env)
+;    (eval-expression rand env)))
+      
+
+;apply-primitive: <primitiva> <list-of-expression> -> numero
+;(define apply-primitive
+  ;(lambda (prim args)
+   ; (cases primitive prim
+    ;  (add-prim () (+ (car args) (cadr args)))
+     ; (substract-prim () (- (car args) (cadr args)))
+      ;(mult-prim () (* (car args) (cadr args)))
+      ;(incr-prim () (+ (car args) 1))
+      ;(decr-prim () (- (car args) 1)))))
+
+;faltantes:---------------------------
+; * evaluar-primitiva-binaria
+; * evaluar-primitiva-unaria 
+
+
+    
 ;*******************************************************************************************
 ; Errores por solucionar (TODOs)
 ;*******************************************************************************************
@@ -205,6 +321,5 @@
 
 ;; Declaración de IA: Se uso la IA para identificación de errores, deficiones de funciones y
 ;; conceptos de SLLGEN 
-
 
 
