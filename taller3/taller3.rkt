@@ -53,7 +53,7 @@
     (decimal-negativo ("-" digit(arbno digit) "." digit (arbno digit)) number)
     (entero-positivo (digit (arbno digit)) number)
     (entero-negativo ("-" digit (arbno digit)) number)
-    (texto ("\"" (arbno (not #\")) "\"") string) ; por revisar
+    (texto (letter (arbno (or letter digit "_"))) string) ; por revisar
     (identificar ("@" letter (arbno letter)) symbol) ; por revisar
     ))
 ;*******************************************************************************************
