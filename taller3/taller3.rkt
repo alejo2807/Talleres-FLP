@@ -48,7 +48,7 @@
 
 (define scanner-interpretador
   '((espacio-blanco (whitespace) skip)
-    (comentario (";" (arbno (not #\newline))) skip)
+    (comentario ("%" (arbno (not #\newline))) skip)
     (decimal-positivo (digit(arbno digit) "." digit (arbno digit)) number)
     (decimal-negativo ("-" digit(arbno digit) "." digit (arbno digit)) number)
     (entero-positivo (digit (arbno digit)) number)
@@ -85,7 +85,13 @@
     (expresion (identificar) var-exp)
 
     ; Texto
-    (expresion (texto) txt) ; por revisar
+    (expresion ("\""texto"\"") texto-lit)
+
+    ; Los dos casos de la gramatica que nos faltaban:
+    ; 1). := (<expresion> <primitiva-binaria> <expresion>) --> primapp-bin-exp (exp1 prim-binaria exp2)
+    (expresion ("("expresion primitiva-binaria expresion")") primapp-bin-exp) ;faltaban los parentesis "(" y ")" para que funcionara jajaj
+    ; 2). := <primitiva-unaria> (<expresion>) --> primapp-un-exp (prim-unaria exp)
+    (expresion (primitiva-unaria "("expresion")") primapp-un-exp)
 
     ; Los dos casos de la gramatica que nos faltaban:
     ; 1). := (<expresion> <primitiva-binaria> <expresion>) --> primapp-bin-exp (exp1 prim-binaria exp2)
@@ -111,7 +117,7 @@
     (primitiva-unaria ("longitud") primitiva-longitud)
     (primitiva-unaria ("add1") primitiva-add1)
     (primitiva-unaria ("sub1") primitiva-sub1)
-    (primitiva-unaria ("neg") primitiva-negracion-booleana)
+    (primitiva-unaria ("neg") primitiva-negacion-booleana)
     
     ))
 ;*******************************************************************************************
@@ -303,6 +309,5 @@
 
 ;; Declaración de IA: Se uso la IA para identificación de errores, deficiones de funciones y
 ;; conceptos de SLLGEN 
-
 
 
