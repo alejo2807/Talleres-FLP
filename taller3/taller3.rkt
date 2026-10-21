@@ -54,7 +54,7 @@
     (entero-positivo (digit (arbno digit)) number)
     (entero-negativo ("-" digit (arbno digit)) number)
     (texto (letter (arbno (or letter digit "_"))) string) ; por revisar
-    (identificar ("@" letter (arbno letter)) symbol) ; por revisar
+    (identificador ("@" letter (arbno letter)) symbol) ; por revisar
     ))
 ;*******************************************************************************************
 
@@ -82,24 +82,21 @@
     (expresion (decimal-negativo) numero-lit)
 
     ; Variables
-    (expresion (identificar) var-exp)
+    (expresion (identificador) var-exp)
 
     ; Texto
     (expresion ("\""texto"\"") texto-lit)
 
-    ; Los dos casos de la gramatica que nos faltaban:
-    ; 1). := (<expresion> <primitiva-binaria> <expresion>) --> primapp-bin-exp (exp1 prim-binaria exp2)
+    ; Expresiones a las que se les aplica una primitiva
     (expresion ("("expresion primitiva-binaria expresion")") primapp-bin-exp) ;faltaban los parentesis "(" y ")" para que funcionara jajaj
-    ; 2). := <primitiva-unaria> (<expresion>) --> primapp-un-exp (prim-unaria exp)
-    (expresion (primitiva-unaria "("expresion")") primapp-un-exp)
-
-    ; Los dos casos de la gramatica que nos faltaban:
-    ; 1). := (<expresion> <primitiva-binaria> <expresion>) --> primapp-bin-exp (exp1 prim-binaria exp2)
-    (expresion ("("expresion primitiva-binaria expresion")") primapp-bin-exp) ;faltaban los parentesis "(" y ")" para que funcionara jajaj
-    ; 2). := <primitiva-unaria> (<expresion>) --> primapp-un-exp (prim-unaria exp)
     (expresion (primitiva-unaria expresion) primapp-un-exp)
 
+    ; Extensiones de la gramatica:
+    ; If-else (condicionales)
+    (expresion ("si" expresion "{"expresion"}"
+                "sino" "{"expresion"}") condicional-exp)
     
+
     ; Primitiva Binaria
     (primitiva-binaria ("+") primitiva-suma)
     (primitiva-binaria ("~") primitiva-resta)
@@ -118,6 +115,12 @@
     (primitiva-unaria ("add1") primitiva-add1)
     (primitiva-unaria ("sub1") primitiva-sub1)
     (primitiva-unaria ("neg") primitiva-negacion-booleana)
+
+
+    
+
+
+
     
     ))
 ;*******************************************************************************************
@@ -198,6 +201,17 @@
   ;(@a @b @c @d @e)
   ;(1 2 3 "hola" "FLP")
   ;#(struct:ambiente-vacio))
+
+; Funcion para simular booleanos
+(define valor-verdad
+  (lambda (numero)
+    (not (zero? numero))
+    )
+  )
+
+
+
+
 ;*******************************************************************************************
 
 ;*******************************************************************************************
