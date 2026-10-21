@@ -177,18 +177,6 @@
   (lambda (syms vals env)
     (ambiente-extendido-record syms vals env)))
 
-; apply-env
-;(define aplicar-ambiente
-;  (lambda (env sym)
-;    (cases environment env
-;      (empty-env-record ()
-                        ;(eopl:error 'apply-env "No binding for ~s" sym))
-      ;(extended-env-record (syms vals env)
-                           ;(let ((pos (list-find-position sym syms)))
-                             ;(if (number? pos)
-                                 ;(list-ref vals pos)
-                                 ;(apply-env env sym)))))))
-
 ; Prueba
 (ambiente-extendido '(@a @b @c @d @e) '(1 2 3 "hola" "FLP") (ambiente-vacio))
 
@@ -212,9 +200,8 @@
 ;      (var-exp (identificador) (apply-env env id))
 ;      ;(txt (texto) texto)
 ;      (primitiva-suma (any prim any)
-;                      (let ((args (eval-any prim eval-any ambiente))
+;                      (let ((args (eval-any any env)))
 ;                        (aplicar-primitva prim args))))))
-; Nota usar el cadr para saber que operador es y luego usar el car y caddr para revisar los numeros
 
       ;(primapp-exp (prim rands)
       ;             (let ((args (eval-rands rands env)))
