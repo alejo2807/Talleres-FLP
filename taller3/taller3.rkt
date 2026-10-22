@@ -53,7 +53,7 @@
     (decimal-negativo ("-" digit(arbno digit) "." digit (arbno digit)) number)
     (entero-positivo (digit (arbno digit)) number)
     (entero-negativo ("-" digit (arbno digit)) number)
-    (texto (letter(arbno (or letter digit "_"))) symbol)
+    (texto (letter (arbno (or letter digit "_"))) string) ; por revisar
     (identificador ("@" letter (arbno letter)) symbol) ; por revisar
     ))
 ;*******************************************************************************************
@@ -277,7 +277,16 @@
   ;(@a @b @c @d @e)
   ;(1 2 3 "hola" "FLP")
   ;#(struct:ambiente-vacio))
-;*******************************************************************************************
+
+; Funcion para simular booleanos
+(define valor-verdad
+  (lambda (numero)
+    (not (zero? numero))
+    )
+  )
+
+
+
 
 ;*******************************************************************************************
 
