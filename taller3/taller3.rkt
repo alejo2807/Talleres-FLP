@@ -87,15 +87,23 @@
     ; Texto
     (expresion ("\""texto"\"") texto-lit)
 
-    ; Expresiones a las que se les aplica una primitiva
-    (expresion ("("expresion primitiva-binaria expresion")") primapp-bin-exp) ;faltaban los parentesis "(" y ")" para que funcionara jajaj
+
+     ; Expresiones a las que se les aplica una primitiva
+    (expresion ("("expresion primitiva-binaria expresion")") primapp-bin-exp) ;faltaban los parentesis "(" y ")" para que funcionara
     (expresion (primitiva-unaria expresion) primapp-un-exp)
 
     ; Extensiones de la gramatica:
-    ; If-else (condicionales)
-    (expresion ("si" expresion "{"expresion"}"
+    ;punto 4 If-else (condicionales)
+    (expresion ("Si" expresion "{"expresion"}"
                 "sino" "{"expresion"}") condicional-exp)
     
+    ;punto 5 declarar (variables locales)
+    (expresion ("declarar" "("(arbno identificador "=" expresion ";")")" "{" expresion "}") variableLocal-exp)
+
+    
+    ;punto 6 procedimiento
+    (expresion ("procedimiento" "(" (separated-list identificador ",") ")" "{" expresion "}")
+           procedimiento-ex)
 
     ; Primitiva Binaria
     (primitiva-binaria ("+") primitiva-suma)
@@ -115,12 +123,6 @@
     (primitiva-unaria ("add1") primitiva-add1)
     (primitiva-unaria ("sub1") primitiva-sub1)
     (primitiva-unaria ("neg") primitiva-negacion-booleana)
-
-
-    
-
-
-
     
     ))
 ;*******************************************************************************************
@@ -183,7 +185,12 @@
               (if (valor-verdad? (evaluar-expresion test-exp amb))
                   (evaluar-expresion true-exp amb)
                   (evaluar-expresion false-exp amb)))
+      
       ;5
+      (variableLocal-exp (ids exps cuerpo)                                 
+               (let ((valores (map (lambda (x) (evaluar-expresion x amb)) exps)))    
+                 (evaluar-expresion cuerpo (ambiente-extendido ids valores amb))))
+      
       (procedimiento-ex (ids cuerpo) (cerradura ids cuerpo amb));6
       (else "TODO")
       )))
@@ -283,8 +290,6 @@
 
 ;*******************************************************************************************
 
-;*******************************************************************************************
-
 ; eval-rands
 ;(define eval-rands
 ;  (lambda (rands env)
@@ -365,4 +370,5 @@
 
 ;; Declaración de IA: Se uso la IA para identificación de errores, deficiones de funciones y
 ;; conceptos de SLLGEN 
+
 
