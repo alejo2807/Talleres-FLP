@@ -1,15 +1,16 @@
 #lang eopl
+(require racket/string)
 
 ;*******************************************************************************************
 ; Interpretador
 
 ;; La definición BNF para las expresiones del lenguaje:
 ;;
-;;  <programa>          := <expresion>(
+;;  <programa>          := <expresion>
 ;;                         un-program (exp)
 ;;  <expresion>         := <numero>
-;;                         numero-lit (num
-;;                      := "\""<texto>"\""
+;;                         numero-lit (num)
+;;                      := <texto>
 ;;                         text-lit (txt)
 ;;                      := <identificador>
 ;;                         var-exp (id)
@@ -17,6 +18,14 @@
 ;;                         primapp-bin-exp (exp1 prim-binaria exp2)
 ;;                      := <primitiva-unaria> (<expresion>)
 ;;                         primapp-un-exp (prim-unaria exp)
+;;                      := si <expresion> {<expresion>} sino {<expresion>}
+;;                         condicional-exp
+;;                      := declarar (arbno <var-exp> = <exp> ;) {<exp>}
+;;                         variable-local-exp
+;;                      := procedimiento (separated-list <identificador> ,) {<exp>}
+;;                      := procedmiento-exp
+;;                      := evaluar
+;;                      := 
 ;;  <primitiva-binaria> := + (primitiva-suma)
 ;;                      := ~ (primitiva-resta)
 ;;                      := / (primitiva-div)
@@ -88,25 +97,34 @@
     (expresion ("\""texto"\"") texto-lit)
 
 
-     ; Expresiones a las que se les aplica una primitiva
-    (expresion ("("expresion primitiva-binaria expresion")") primapp-bin-exp) ;faltaban los parentesis "(" y ")" para que funcionara
-    (expresion (primitiva-unaria expresion) primapp-un-exp)
+    ; Primitiva Binaria
+    (expresion ("("expresion primitiva-binaria expresion")") primitiva-binaria-expresion)
+
+    ; Primitiva Unaria
+    (expresion (primitiva-unaria "(" expresion ")") primitiva-unaria-expresion)
 
     ; Extensiones de la gramatica:
     ;punto 4 If-else (condicionales)
-    (expresion ("Si" expresion "{"expresion"}"
-                "sino" "{"expresion"}") condicional-exp)
+    (expresion ("Si" expresion
+                "{"expresion"}" ; #t
+                "sino" "{"expresion"}") ; #f
+               condicional-exp) ; name
     
     ;punto 5 declarar (variables locales)
-    (expresion ("declarar" "("(arbno identificador "=" expresion ";")")" "{" expresion "}") variableLocal-exp)
+    (expresion ("declarar" "("(arbno identificador "=" expresion ";")")"
+                           "{" expresion "}") variable-local-exp)
 
     
     ;punto 6 procedimiento
-    (expresion ("procedimiento" "(" (separated-list identificador ",") ")" "{" expresion "}")
-           procedimiento-ex)
+    (expresion ("procedimiento"
+                "(" (separated-list identificador ",") ")" ; # parametros
+                "{" expresion "}")
+                procedimiento-exp)
 
     ;punto 7 evaluar
-    (expresion ("evaluar" expresion "(" (separated-list expresion ",") ")" "finEval") app-exp) 
+    (expresion ("evaluar" expresion
+                "(" (separated-list expresion ",") ")"
+                "finEval") aplicar-exp) 
 
     ; Primitiva Binaria
     (primitiva-binaria ("+") primitiva-suma)
@@ -180,9 +198,16 @@
       (var-exp (identificador) (buscar-variable amb identificador))
       (texto-lit (texto) texto)
 
-      ;(primapp-exp (prim rands)
-       ;            (let ((args (eval-rands rands env)))          Falta hacer para los casos de unaria y binaria para poder probar los siguientes pasos
-        ;             (apply-primitive prim args)))
+      (primitiva-binaria-expresion (expresion1 operador expresion2)
+                   (evaluar-primitiva-binaria
+                            operador
+                            (evaluar-expresion expresion1 amb)
+                            (evaluar-expresion expresion2 amb)))
+      
+      (primitiva-unaria-expresion (operador expresion)
+                                  (evaluar-primitiva-unaria
+                                   operador
+                                   (evaluar-expresion expresion amb)))
 
       (condicional-exp (test-exp true-exp false-exp) ;4
               (if (valor-verdad? (evaluar-expresion test-exp amb))
@@ -190,15 +215,15 @@
                   (evaluar-expresion false-exp amb)))
       
       ;5    
-      (variableLocal-exp (ids exps cuerpo)
+      (variable-local-exp (ids exps cuerpo)
                          (let((valores (eval-exps exps amb)))
                            (evaluar-expresion cuerpo(ambiente-extendido ids valores amb))
                            ))
       
-      (procedimiento-ex (ids cuerpo) (cerradura ids cuerpo amb));6
+      (procedimiento-exp (ids cuerpo) (cerradura ids cuerpo amb));6
 
       ;7
-      (app-exp (exp exps)
+      (aplicar-exp (exp exps)
                (let ((proc (evaluar-expresion exp amb))
                      (args (eval-exps exps amb)))
                  (if (procVal? proc)
@@ -208,9 +233,30 @@
       (else "TODO")
       )))
 
-;(expresion ("Si" expresion "{"expresion"}"
- ;               "sino" "{"expresion"}") condicional-exp)
-       ; Falta implementar la evluacion de expresiones
+(define evaluar-primitiva-binaria
+  (lambda (primitiva expresion1 expresion2)
+    (cases primitiva-binaria primitiva
+      (primitiva-suma () (+ expresion1 expresion2))
+      (primitiva-resta () (- expresion1 expresion2))
+      (primitiva-div () (/ expresion1 expresion2))
+      (primitiva-multi () (* expresion1 expresion2))
+      (primitiva-concat () (string-append expresion1 expresion2)) ; no funciona el texto
+      (primitiva-mayor () (> expresion1 expresion2))
+      (primitiva-menor () (<  expresion1 expresion2))
+      (primitiva-mayor-igual () (>= expresion1 expresion2))
+      (primitiva-menor-igual () (<= expresion1 expresion2))
+      (primitiva-diferente () (not (equal? expresion1 expresion2)))
+      (primitiva-comparador-igual () (equal? expresion1 expresion2))
+    )))
+
+(define evaluar-primitiva-unaria
+  (lambda (primitiva expresion)
+    (cases primitiva-unaria primitiva
+      (primitiva-longitud () (string-length expresion))
+      (primitiva-add1 () (+ expresion 1))
+      (primitiva-sub1 () (- expresion 1))
+      (primitiva-negacion-booleana () (not (expresion)))))) ; pendiente por revisr
+
 ;*******************************************************************************************
 
 ;*******************************************************************************************
@@ -324,30 +370,9 @@
 
 ;*******************************************************************************************
 
-; eval-rands
-;(define eval-rands
-;  (lambda (rands env)
-;    (map (lambda (x) (eval-rand x env)) rands)))
-
-; eval-rand
-;(define eval-rand
-;  (lambda (rand env)
-;    (eval-expression rand env)))
       
 
-;apply-primitive: <primitiva> <list-of-expression> -> numero
-;(define apply-primitive
-  ;(lambda (prim args)
-   ; (cases primitive prim
-    ;  (add-prim () (+ (car args) (cadr args)))
-     ; (substract-prim () (- (car args) (cadr args)))
-      ;(mult-prim () (* (car args) (cadr args)))
-      ;(incr-prim () (+ (car args) 1))
-      ;(decr-prim () (- (car args) 1)))))
 
-;faltantes:---------------------------
-; * evaluar-primitiva-binaria
-; * evaluar-primitiva-unaria 
 
 
 
