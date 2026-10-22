@@ -105,6 +105,9 @@
     (expresion ("procedimiento" "(" (separated-list identificador ",") ")" "{" expresion "}")
            procedimiento-ex)
 
+    ;punto 7 evaluar
+    (expresion ("evaluar" expresion "(" (separated-list expresion ",") ")" "finEval") app-exp) 
+
     ; Primitiva Binaria
     (primitiva-binaria ("+") primitiva-suma)
     (primitiva-binaria ("~") primitiva-resta)
@@ -186,12 +189,22 @@
                   (evaluar-expresion true-exp amb)
                   (evaluar-expresion false-exp amb)))
       
-      ;5
-      (variableLocal-exp (ids exps cuerpo)                                 
-               (let ((valores (map (lambda (x) (evaluar-expresion x amb)) exps)))    
-                 (evaluar-expresion cuerpo (ambiente-extendido ids valores amb))))
+      ;5    
+      (variableLocal-exp (ids exps cuerpo)
+                         (let((valores (eval-exps exps amb)))
+                           (evaluar-expresion cuerpo(ambiente-extendido ids valores amb))
+                           ))
       
       (procedimiento-ex (ids cuerpo) (cerradura ids cuerpo amb));6
+
+      ;7
+      (app-exp (exp exps)
+               (let ((proc (evaluar-expresion exp amb))
+                     (args (eval-exps exps amb)))
+                 (if (procVal? proc)
+                     (aplicar-procedimiento proc args)
+                     (eopl:error 'evaluar-expresion "Attempt to apply non-procedure ~s" proc))))
+      
       (else "TODO")
       )))
 
@@ -251,6 +264,27 @@
     (not (zero? numero))
     )
   )
+
+; Funcion para evaluar cada expresión de la lista en el ambiente dado y devuelve la lista
+; de resultados en el mismo orden
+(define eval-exps
+  (lambda (list-exps amb)
+    (if (null? list-exps)
+        '()
+        (cons
+         (evaluar-expresion (car list-exps) amb)
+         (eval-exps (cdr list-exps) amb)))))
+
+;Funcion para evaluar el cuerpo de un procedimiento en el ambiente extendido
+;recibe un procedimiento, una lista de valores y retorna un valor
+(define aplicar-procedimiento
+  (lambda (proc args)
+    (cases procVal proc
+      (cerradura (ids body amb)
+                 (evaluar-expresion body (ambiente-extendido ids args amb))))))
+                 
+                 
+
 
 ; funciones auxiliares para encontrar la posición de un símbolo
 ; en la lista de símbolos de unambiente
