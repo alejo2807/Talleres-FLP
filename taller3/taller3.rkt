@@ -153,6 +153,7 @@
       scanner-interpretador
       grammar-interpretador)))
 
+
 ;*******************************************************************************************
 
 ;*******************************************************************************************
@@ -161,10 +162,34 @@
 ; eval-program: <programa> -> numero
 ; función que evalúa un programa teniendo en cuenta un ambiente
 ; dado (se inicializa dentro del programa)
-(define evaluar-programa
+(define evaluar-programa     ;          (eval-expression body (ambiente-inicial ))))))
   (lambda (pgm)
-    pgm))
-       ;          (eval-expression body (ambiente-inicial ))))))
+    (cases programa pgm
+      (un-programa (body)
+                 (evaluar-expresion body (ambiente-inicial))))))
+
+(define evaluar-expresion 
+  (lambda (exp amb)
+    (cases expresion exp
+      (numero-lit (numero) numero)
+      (var-exp (identificador) (buscar-variable amb identificador))
+      (texto-lit (texto) texto)
+
+      ;(primapp-exp (prim rands)
+       ;            (let ((args (eval-rands rands env)))          Falta hacer para los casos de unaria y binaria para poder probar los siguientes pasos
+        ;             (apply-primitive prim args)))
+
+      (condicional-exp (test-exp true-exp false-exp) ;4
+              (if (valor-verdad? (evaluar-expresion test-exp amb))
+                  (evaluar-expresion true-exp amb)
+                  (evaluar-expresion false-exp amb)))
+      ;5
+      (procedimiento-ex (ids cuerpo) (cerradura ids cuerpo amb));6
+      (else "TODO")
+      )))
+
+;(expresion ("Si" expresion "{"expresion"}"
+ ;               "sino" "{"expresion"}") condicional-exp)
        ; Falta implementar la evluacion de expresiones
 ;*******************************************************************************************
 
@@ -178,6 +203,13 @@
                        (vals (list-of scheme-value?))
                        (env ambiente?)))
 
+;datatype de procedimientos
+(define-datatype procVal procVal?
+  (cerradura
+   (list-ID (list-of symbol?))
+   (exp expresion?)
+   (amb ambiente?)))
+
 (define scheme-value? (lambda (v) #t))
 
 ; Ambiente inicial
@@ -190,8 +222,45 @@
 
 ; Ambiente extendido
 (define ambiente-extendido 
-  (lambda (syms vals env)
-    (ambiente-extendido-record syms vals env)))
+  (lambda (simbolos vals env)
+    (ambiente-extendido-record simbolos vals env)))
+
+;Aply-env
+(define buscar-variable
+  (lambda (env sym)
+    (cases ambiente env
+      (ambiente-vacio () "Error, la variable no existe")
+      (ambiente-extendido-record (simbolos vals env)
+                           (let ((pos (list-find-position sym simbolos)))
+                             (if (number? pos)
+                                 (list-ref vals pos)
+                                 (buscar-variable env sym)))))))
+
+;Funciones Auxiliares
+
+; Funcion para simular booleanos
+(define valor-verdad?
+  (lambda (numero)
+    (not (zero? numero))
+    )
+  )
+
+; funciones auxiliares para encontrar la posición de un símbolo
+; en la lista de símbolos de unambiente
+
+(define list-find-position
+  (lambda (sym los)
+    (list-index (lambda (sym1) (eqv? sym1 sym)) los)))
+
+(define list-index
+  (lambda (pred ls)
+    (cond
+      ((null? ls) #f)
+      ((pred (car ls)) 0)
+      (else (let ((list-index-r (list-index pred (cdr ls))))
+              (if (number? list-index-r)
+                (+ list-index-r 1)
+                #f))))))
 
 ; Prueba
 (ambiente-extendido '(@a @b @c @d @e) '(1 2 3 "hola" "FLP") (ambiente-vacio))
@@ -215,24 +284,6 @@
 ;*******************************************************************************************
 
 ;*******************************************************************************************
-; to-do:
-; * evaluar-expression
-; * evaluar-primitiva-binaria
-; * evaluar-primitiva-unaria
-; eval-expression
-;(define eval-expression
-;  (lambda (exp env)
-;    (cases expression exp
-;      (numero-lit (numero) numero)
-;      (var-exp (identificador) (apply-env env id))
-;      ;(txt (texto) texto)
-;      (primitiva-suma (any prim any)
-;                      (let ((args (eval-any any env)))
-;                        (aplicar-primitva prim args))))))
-
-      ;(primapp-exp (prim rands)
-      ;             (let ((args (eval-rands rands env)))
-      ;               (apply-primitive prim args)))
 
 ; eval-rands
 ;(define eval-rands
@@ -244,17 +295,6 @@
 ;  (lambda (rand env)
 ;    (eval-expression rand env)))
       
-; apply-env
-;(define apply-env
-;  (lambda (env sym)
-;    (cases environment env
-;      (empty-env-record ()
-                        ;(eopl:error 'apply-env "No binding for ~s" sym))
-      ;(extended-env-record (syms vals env)
-                           ;(let ((pos (list-find-position sym syms)))
-                             ;(if (number? pos)
-                                 ;(list-ref vals pos)
-                                 ;(apply-env env sym)))))))
 
 ;apply-primitive: <primitiva> <list-of-expression> -> numero
 ;(define apply-primitive
@@ -266,8 +306,10 @@
       ;(incr-prim () (+ (car args) 1))
       ;(decr-prim () (- (car args) 1)))))
 
+;faltantes:---------------------------
+; * evaluar-primitiva-binaria
+; * evaluar-primitiva-unaria 
 
-    
 
 
     
@@ -323,5 +365,4 @@
 
 ;; Declaración de IA: Se uso la IA para identificación de errores, deficiones de funciones y
 ;; conceptos de SLLGEN 
-
 
