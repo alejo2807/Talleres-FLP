@@ -53,7 +53,7 @@
     (decimal-negativo ("-" digit(arbno digit) "." digit (arbno digit)) number)
     (entero-positivo (digit (arbno digit)) number)
     (entero-negativo ("-" digit (arbno digit)) number)
-    (texto (letter(arbno (or letter digit "_"))) symbol)
+    (texto (letter (arbno (or letter digit "_"))) string) ; por revisar
     (identificador ("@" letter (arbno letter)) symbol) ; por revisar
     ))
 ;*******************************************************************************************
@@ -87,20 +87,15 @@
     ; Texto
     (expresion ("\""texto"\"") texto-lit)
 
-
-     ; Expresiones a las que se les aplica una primitiva
-    (expresion ("("expresion primitiva-binaria expresion")") primapp-bin-exp) ;faltaban los parentesis "(" y ")" para que funcionara
+    ; Expresiones a las que se les aplica una primitiva
+    (expresion ("("expresion primitiva-binaria expresion")") primapp-bin-exp) ;faltaban los parentesis "(" y ")" para que funcionara jajaj
     (expresion (primitiva-unaria expresion) primapp-un-exp)
 
     ; Extensiones de la gramatica:
-    ;punto 4 If-else (condicionales)
-    (expresion ("Si" expresion "{"expresion"}"
+    ; If-else (condicionales)
+    (expresion ("si" expresion "{"expresion"}"
                 "sino" "{"expresion"}") condicional-exp)
-
     
-    ;punto 6 procedimiento
-    (expresion ("procedimiento" "(" (separated-list identificador ",") ")" "{" expresion "}")
-           procedimiento-ex)
 
     ; Primitiva Binaria
     (primitiva-binaria ("+") primitiva-suma)
@@ -120,6 +115,12 @@
     (primitiva-unaria ("add1") primitiva-add1)
     (primitiva-unaria ("sub1") primitiva-sub1)
     (primitiva-unaria ("neg") primitiva-negacion-booleana)
+
+
+    
+
+
+
     
     ))
 ;*******************************************************************************************
@@ -269,6 +270,17 @@
   ;(@a @b @c @d @e)
   ;(1 2 3 "hola" "FLP")
   ;#(struct:ambiente-vacio))
+
+; Funcion para simular booleanos
+(define valor-verdad
+  (lambda (numero)
+    (not (zero? numero))
+    )
+  )
+
+
+
+
 ;*******************************************************************************************
 
 ;*******************************************************************************************
