@@ -241,12 +241,12 @@
       (primitiva-div () (/ expresion1 expresion2))
       (primitiva-multi () (* expresion1 expresion2))
       (primitiva-concat () (string-append expresion1 expresion2)) ; no funciona el texto
-      (primitiva-mayor () (> expresion1 expresion2))
-      (primitiva-menor () (<  expresion1 expresion2))
-      (primitiva-mayor-igual () (>= expresion1 expresion2))
-      (primitiva-menor-igual () (<= expresion1 expresion2))
-      (primitiva-diferente () (not (equal? expresion1 expresion2)))
-      (primitiva-comparador-igual () (equal? expresion1 expresion2))
+      (primitiva-mayor () (condicional? '> expresion1 expresion2))
+      (primitiva-menor () (condicional? '< expresion1 expresion2))
+      (primitiva-mayor-igual () (condicional? '>= expresion1 expresion2)) ; >=
+      (primitiva-menor-igual () (condicional? '<= expresion1 expresion2))
+      (primitiva-diferente () (condicional? '!= expresion1 expresion2))
+      (primitiva-comparador-igual () (condicional? '== expresion1 expresion2))
     )))
 
 (define evaluar-primitiva-unaria
@@ -255,7 +255,8 @@
       (primitiva-longitud () (string-length expresion))
       (primitiva-add1 () (+ expresion 1))
       (primitiva-sub1 () (- expresion 1))
-      (primitiva-negacion-booleana () (not (expresion)))))) ; pendiente por revisr
+      (primitiva-negacion-booleana () (negacion-booleana expresion))
+      ))) 
 
 ;*******************************************************************************************
 
@@ -307,9 +308,41 @@
 ; Funcion para simular booleanos
 (define valor-verdad?
   (lambda (numero)
-    (not (zero? numero))
-    )
-  )
+    (if (not (zero? numero)) 1 0)))
+
+; logica inversa de valor-verdad?
+(define negacion-booleana
+  (lambda (numero)
+    (if (zero? numero) 1 0))) 
+
+(define mayor-numero?
+  (lambda (numero)
+    (if (> numero 0) 1 0)))
+
+(define mayor-igual-numero?
+  (lambda (numero)
+    (if (eqv? numero 0)
+        1
+        (mayor-numero? numero))))
+
+(define igualdad
+  (lambda (expresion1 expresion2)
+    (if (eqv? expresion1 expresion2) 1 0)))
+
+(define desigualdad
+  (lambda (expresion1 expresion2)
+    (if (eqv? expresion1 expresion2) 0 1)))
+
+(define condicional?
+  (lambda (operador expresion1 expresion2)
+    (cond
+      [(equal? '> operador) (mayor-numero? (- expresion1 expresion2))]
+      [(equal? '< operador) (mayor-numero? (- expresion2 expresion1))]
+      [(equal? '>= operador) (mayor-igual-numero? (- expresion1 expresion2))]
+      [(equal? '<= operador) (mayor-igual-numero? (- expresion2 expresion1))]
+      [(equal? '!= operador) (desigualdad expresion1 expresion2)]
+      [(equal? '== operador) (igualdad expresion1 expresion2)]
+      [else ("Operador no soportado" operador)])))
 
 ; Funcion para evaluar cada expresión de la lista en el ambiente dado y devuelve la lista
 ; de resultados en el mismo orden
