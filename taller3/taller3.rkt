@@ -25,7 +25,9 @@
 ;;                      := procedimiento (separated-list <identificador> ,) {<exp>}
 ;;                      := procedmiento-exp
 ;;                      := evaluar
-;;                      := 
+;;                      := letrec {identificador ({identificador}*(,)) = <expresion>}* in <expresion>
+;;                         <letrec-exp proc-names idss bodies bodyletrec>
+
 ;;  <primitiva-binaria> := + (primitiva-suma)
 ;;                      := ~ (primitiva-resta)
 ;;                      := / (primitiva-div)
@@ -37,10 +39,12 @@
 ;;                      := <= (primitiva-menor-igual)
 ;;                      := =! (primitiva-diferente)
 ;;                      := == (primitiva-comparador-igual)
+
 ;;  <primitiva-unaria>  := longitud (primitiva-longitud)
 ;;                      := add1 (primitiva-add1)
 ;;                      := sub1 (primitiva-sub1)
 ;;                      := neg (primitiva-negacion-booleana)
+
 ;*******************************************************************************************
 
 ;*******************************************************************************************
@@ -124,7 +128,11 @@
     ;punto 7 evaluar
     (expresion ("evaluar" expresion
                 "(" (separated-list expresion ",") ")"
-                "finEval") aplicar-exp) 
+                "finEval") aplicar-exp)
+
+    ;punto 8 letrec (llamados recursivos)
+    (expresion  ("letrec" (arbno identificador "[" (separated-list identificador ",") "]" "=" expresion ";") "in" expresion ";")
+                letrec-exp)
 
     ; Primitiva Binaria
     (primitiva-binaria ("+") primitiva-suma)
@@ -208,8 +216,8 @@
                                   (evaluar-primitiva-unaria
                                    operador
                                    (evaluar-expresion expresion amb)))
-
-      (condicional-exp (test-exp true-exp false-exp) ;4
+      ;4
+      (condicional-exp (test-exp true-exp false-exp) 
               (if (valor-verdad? (evaluar-expresion test-exp amb))
                   (evaluar-expresion true-exp amb)
                   (evaluar-expresion false-exp amb)))
@@ -219,8 +227,9 @@
                          (let((valores (eval-exps exps amb)))
                            (evaluar-expresion cuerpo(ambiente-extendido ids valores amb))
                            ))
-      
-      (procedimiento-exp (ids cuerpo) (cerradura ids cuerpo amb));6
+
+      ;6
+      (procedimiento-exp (ids cuerpo) (cerradura ids cuerpo amb))
 
       ;7
       (aplicar-exp (exp exps)
@@ -229,9 +238,11 @@
                  (if (procVal? proc)
                      (aplicar-procedimiento proc args)
                      (eopl:error 'evaluar-expresion "Attempt to apply non-procedure ~s" proc))))
-      
-      (else "TODO")
-      )))
+
+     ;8
+      (letrec-exp (proc-names idss bodies letrec-body)
+                 (evaluar-expresion letrec-body
+                  (ambiente-extendido-recursivo proc-names idss bodies amb))))))
 
 (define evaluar-primitiva-binaria
   (lambda (primitiva expresion1 expresion2)
@@ -268,9 +279,14 @@
   (ambiente-vacio)
   (ambiente-extendido-record (simbolos (list-of symbol?))
                        (vals (list-of scheme-value?))
-                       (env ambiente?)))
+                       (env ambiente?))
+  (ambiente-extendido-recursivo-record
+                              (proc-names(list-of symbol?))
+                              (idss (list-of (list-of symbol?)))
+                              (bodies (list-of expresion?))
+                              (env ambiente?)))
 
-;datatype de procedimientos
+;datatype de procedimientos (cerradura == closure == clausura)
 (define-datatype procVal procVal?
   (cerradura
    (list-ID (list-of symbol?))
@@ -292,7 +308,13 @@
   (lambda (simbolos vals env)
     (ambiente-extendido-record simbolos vals env)))
 
-;Aply-env
+; Ambiente extendido recursivo
+(define ambiente-extendido-recursivo 
+  (lambda (proc-names idss bodies old-env)
+    (ambiente-extendido-recursivo-record proc-names idss bodies old-env)))
+
+
+;Apply-env
 (define buscar-variable
   (lambda (env sym)
     (cases ambiente env
@@ -301,7 +323,15 @@
                            (let ((pos (list-find-position sym simbolos)))
                              (if (number? pos)
                                  (list-ref vals pos)
-                                 (buscar-variable env sym)))))))
+                                 (buscar-variable env sym))))
+      (ambiente-extendido-recursivo-record (proc-names idss bodies old-env)
+            (let ((pos (list-find-position sym proc-names)))
+               (if (number? pos)
+                   (cerradura (list-ref idss pos)
+                            (list-ref bodies pos)
+                            env)
+                   (buscar-variable old-env sym)))))))
+     
 
 ;Funciones Auxiliares
 
@@ -390,13 +420,6 @@
   ;(@a @b @c @d @e)
   ;(1 2 3 "hola" "FLP")
   ;#(struct:ambiente-vacio))
-
-; Funcion para simular booleanos
-(define valor-verdad
-  (lambda (numero)
-    (not (zero? numero))
-    )
-  )
 
 
 
