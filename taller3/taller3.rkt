@@ -421,13 +421,35 @@
   (lambda (numero)
     (not (zero? numero))))
 
+; idea
+; (3 4)
+; plus (3 4)
+; if (= 3 0) #f -> (+ 1 (plus 2 4))
 
+; ejercicio 9. c
+(define plus
+  (lambda (x y)
+    (if (= x 0)
+        y
+        (+ 1 (plus (- x 1) y)))))
 
-
+(define multiplicar
+  (lambda (x y)
+    (if (= x 0)
+        0
+        (+ y (multiplicar (- x 1) y)))))
+        
+; multiplicar (3 4) => 4 + 4 + 4
 ;*******************************************************************************************
 ;EJERCICIOS CALIFICABLES
 ;*******************************************************************************************
-
+; 9. c
+; letrec
+; @multiplicar[@a, @b] = Si @a
+; {(@b + evaluar @multiplicar(sub1(@a), @b) finEval)}
+; sino {0};
+; in
+;  evaluar @multiplicar(3, 4) finEval;
 ;---9e---
 ;;@integrantes es un procedimiento el cual declara dentro cuatro variables locales y las devuelve concatenadas
 ;;
