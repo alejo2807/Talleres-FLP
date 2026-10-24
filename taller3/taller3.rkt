@@ -210,7 +210,7 @@
                                    (evaluar-expresion expresion amb)))
 
       (condicional-exp (test-exp true-exp false-exp) ;4
-              (if (valor-verdad? (evaluar-expresion test-exp amb))
+              (if (valor-verdad (evaluar-expresion test-exp amb))
                   (evaluar-expresion true-exp amb)
                   (evaluar-expresion false-exp amb)))
       
@@ -304,11 +304,6 @@
                                  (buscar-variable env sym)))))))
 
 ;Funciones Auxiliares
-
-; Funcion para simular booleanos
-(define valor-verdad?
-  (lambda (numero)
-    (if (not (zero? numero)) 1 0)))
 
 ; logica inversa de valor-verdad?
 (define negacion-booleana
