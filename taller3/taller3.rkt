@@ -402,10 +402,41 @@
 
 
 ;*******************************************************************************************
+;EJERCICIOS CALIFICABLES
+;*******************************************************************************************
 
-      
-
-
+;---9e---
+;;@integrantes es un procedimiento el cual declara dentro cuatro variables locales y las devuelve concatenadas
+;;
+;;@saludar es un procedimiento que recibe otro procedimiento y devuelve otro procedimiento que al ejecutarse llama
+;;a @f y le concatena "Hola" al inicio de su resultado
+;;
+;;@decorate guarda el procedimiento que devuelve @saludar al recibir @integrantes y al invocarlo con 'evaluar @decorate() finEval'
+;;se obtiene el saludo
+;;
+;;Resultado esperado: "HolaDaniel_y_Brandon_y_David_y_Lasprilla"
+;
+;declarar(
+;
+;@integrantes = procedimiento () { declarar (
+;@nomuno = "Daniel_y_";
+;@nomdos = "Brandon_y_";
+;@nomtres = "David_y_";
+;@nomcuatro = "Lasprilla";
+;) {
+;((@nomuno concat @nomdos) concat (@nomtres concat @nomcuatro))
+;}
+;};
+;
+;
+;@saludar = procedimiento (@f) { procedimiento () { ("Hola"  concat evaluar @f() finEval) } };
+;){ declarar (
+;@decorate = evaluar @saludar(@integrantes) finEval;
+;){
+;evaluar @decorate() finEval
+;}
+;}
+;
 
 
 
