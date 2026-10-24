@@ -216,9 +216,9 @@
                                   (evaluar-primitiva-unaria
                                    operador
                                    (evaluar-expresion expresion amb)))
-      ;4
-      (condicional-exp (test-exp true-exp false-exp) 
-              (if (valor-verdad? (evaluar-expresion test-exp amb))
+
+      (condicional-exp (test-exp true-exp false-exp) ;4
+              (if (valor-verdad (evaluar-expresion test-exp amb))
                   (evaluar-expresion true-exp amb)
                   (evaluar-expresion false-exp amb)))
       
@@ -335,11 +335,6 @@
 
 ;Funciones Auxiliares
 
-; Funcion para simular booleanos
-(define valor-verdad?
-  (lambda (numero)
-    (if (not (zero? numero)) 1 0)))
-
 ; logica inversa de valor-verdad?
 (define negacion-booleana
   (lambda (numero)
@@ -421,14 +416,50 @@
   ;(1 2 3 "hola" "FLP")
   ;#(struct:ambiente-vacio))
 
+; Funcion para simular booleanos
+(define valor-verdad
+  (lambda (numero)
+    (not (zero? numero))))
+
 
 
 
 ;*******************************************************************************************
+;EJERCICIOS CALIFICABLES
+;*******************************************************************************************
 
-      
-
-
+;---9e---
+;;@integrantes es un procedimiento el cual declara dentro cuatro variables locales y las devuelve concatenadas
+;;
+;;@saludar es un procedimiento que recibe otro procedimiento y devuelve otro procedimiento que al ejecutarse llama
+;;a @f y le concatena "Hola" al inicio de su resultado
+;;
+;;@decorate guarda el procedimiento que devuelve @saludar al recibir @integrantes y al invocarlo con 'evaluar @decorate() finEval'
+;;se obtiene el saludo
+;;
+;;Resultado esperado: "HolaDaniel_y_Brandon_y_David_y_Lasprilla"
+;
+;declarar(
+;
+;@integrantes = procedimiento () { declarar (
+;@nomuno = "Daniel_y_";
+;@nomdos = "Brandon_y_";
+;@nomtres = "David_y_";
+;@nomcuatro = "Lasprilla";
+;) {
+;((@nomuno concat @nomdos) concat (@nomtres concat @nomcuatro))
+;}
+;};
+;
+;
+;@saludar = procedimiento (@f) { procedimiento () { ("Hola"  concat evaluar @f() finEval) } };
+;){ declarar (
+;@decorate = evaluar @saludar(@integrantes) finEval;
+;){
+;evaluar @decorate() finEval
+;}
+;}
+;
 
 
 
